@@ -1,0 +1,96 @@
+# Local development stack.
+#
+# Mirrors the production topology — app, queue worker, scheduler, MySQL, Redis,
+# nginx — so that "works locally" means something. The queue worker in
+# particular is a separate process here for the same reason it is in
+# production: synchronisation must never run inside an HTTP request.
+
+services:
+    app:
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
+        volumes:
+            - .:/var/www/html
+        depends_on:
+            mysql:
+                condition: service_healthy
+            redis:
+                condition: service_started
+        environment:
+            DB_HOST: mysql
+            REDIS_HOST: redis
+
+    nginx:
+        image: nginx:1.27-alpine
+        ports:
+            - '${APP_PORT:-8000}:80'
+        volumes:
+            - .:/var/www/html:ro
+            - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+        depends_on:
+            - app
+
+    # Queue workers process synchronisation, device actions and notifications.
+    # `--max-jobs` and `--max-time` recycle the process periodically so a long
+    # running worker cannot accumulate leaked memory or stale config.
+    queue:
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
+        command: php artisan queue:work redis --queue=sync,maintenance,default --tries=3 --max-jobs=500 --max-time=3600 --timeout=1800
+        volumes:
+            - .:/var/www/html
+        depends_on:
+            mysql:
+                condition: service_healthy
+            redis:
+                condition: service_started
+        environment:
+            DB_HOST: mysql
+            REDIS_HOST: redis
+        restart: unless-stopped
+
+    scheduler:
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
+        command: php artisan schedule:work
+        volumes:
+            - .:/var/www/html
+        depends_on:
+            mysql:
+                condition: service_healthy
+            redis:
+                condition: service_started
+        environment:
+            DB_HOST: mysql
+            REDIS_HOST: redis
+        restart: unless-stopped
+
+    mysql:
+        image: mysql:8.4
+        environment:
+            MYSQL_DATABASE: '${DB_DATABASE:-pitwall}'
+            MYSQL_USER: '${DB_USERNAME:-pitwall}'
+            MYSQL_PASSWORD: '${DB_PASSWORD:-secret}'
+            MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD:-secret}'
+        volumes:
+            - mysql-data:/var/lib/mysql
+        healthcheck:
+            test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+            interval: 5s
+            timeout: 5s
+            retries: 20
+
+    redis:
+        image: redis:7-alpine
+        # Persistence on, because Redis holds the queue here. Losing it would
+        # lose in-flight synchronisation and device actions.
+        command: redis-server --appendonly yes
+        volumes:
+            - redis-data:/data
+
+volumes:
+    mysql-data:
+    redis-data:

@@ -1,0 +1,129 @@
+# Dependabot configuration.
+#
+# Grouping is the point of this file. Ungrouped, four ecosystems produce a
+# steady drip of single-dependency pull requests that nobody reviews properly
+# and everyone merges on sight — which is exactly the habit a supply-chain
+# attack relies on. Minor and patch updates are therefore batched into one PR
+# per ecosystem per week, while major updates stay separate: those are the ones
+# that carry breaking changes and deserve to be read.
+#
+# Schedule note: everything lands Monday morning so updates are reviewed at the
+# start of a week rather than discovered half-applied on a Friday.
+
+version: 2
+
+updates:
+  # ---------------------------------------------------------------------------
+  # PHP
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: Europe/London
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - php
+    commit-message:
+      prefix: composer
+    groups:
+      php-minor-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # Laravel majors are a planned migration, not a dependency bump. Track
+      # them deliberately rather than as an unexpected PR.
+      - dependency-name: laravel/framework
+        update-types:
+          - version-update:semver-major
+
+  # ---------------------------------------------------------------------------
+  # JavaScript
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: Europe/London
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: npm
+    groups:
+      # Build tooling moves fast and breaks together. Keeping Vite, Tailwind and
+      # the TypeScript toolchain in one PR means a failed build points at one
+      # change set rather than three interleaved ones.
+      frontend-tooling:
+        patterns:
+          - 'vite'
+          - '@vitejs/*'
+          - 'laravel-vite-plugin'
+          - 'tailwindcss'
+          - '@tailwindcss/*'
+          - 'typescript'
+          - '@types/*'
+      js-minor-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+
+  # ---------------------------------------------------------------------------
+  # GitHub Actions
+  #
+  # Third-party actions run with access to the repository and to whatever
+  # secrets a workflow exposes, so keeping them current matters more than the
+  # small number of updates suggests.
+  #
+  # This has nothing to watch until the first workflow exists under
+  # .github/workflows. It is configured now so it starts working the moment one
+  # is added, rather than being remembered later.
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: Europe/London
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: actions
+    groups:
+      actions-all:
+        patterns:
+          - '*'
+
+  # ---------------------------------------------------------------------------
+  # Container base image
+  #
+  # Covers docker/php/Dockerfile. The images pinned in docker-compose.yml
+  # (nginx, mysql, redis) are not tracked here — see docs/next-steps.md.
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: docker
+    directory: /docker/php
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: Europe/London
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - docker
+    commit-message:
+      prefix: docker

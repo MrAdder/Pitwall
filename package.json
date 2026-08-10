@@ -1,0 +1,33 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "name": "pitwall",
+    "version": "0.1.0",
+    "description": "PitWall IT Operations — an operations layer for Microsoft 365 IT teams.",
+    "license": "BUSL-1.1",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.3.3",
+        "@types/node": "^26.2.0",
+        "@types/react": "^19.2.18",
+        "@types/react-dom": "^19.2.4",
+        "@vitejs/plugin-react": "^6.0.5",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^3.1",
+        "tailwindcss": "^4.3.3",
+        "typescript": "^7.0.2",
+        "vite": "^8.0.0"
+    },
+    "dependencies": {
+        "@tanstack/react-query": "^5.101.4",
+        "axios": "^1.19.0",
+        "clsx": "^2.1.1",
+        "react": "^19.2.8",
+        "react-dom": "^19.2.8",
+        "react-router-dom": "^7.18.2"
+    }
+}

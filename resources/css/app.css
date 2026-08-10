@@ -1,0 +1,68 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+/*
+ * Design tokens.
+ *
+ * Named by role rather than by colour, so a palette change is a change here
+ * rather than a sweep through every component. The dark values are the
+ * defaults: the platform is an operations console, and those are read in dim
+ * rooms more often than not.
+ *
+ * These same values are duplicated in docs/images/banner.php, which draws the
+ * banner from them so the artwork cannot drift from the interface. Keep them in
+ * OKLCH on both sides so a change can be pasted across unaltered.
+ */
+@theme {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    --color-surface: oklch(0.19 0.012 260);
+    --color-surface-raised: oklch(0.24 0.014 260);
+    --color-surface-sunken: oklch(0.15 0.012 260);
+
+    --color-border-subtle: oklch(0.32 0.014 260);
+
+    --color-content: oklch(0.96 0.004 260);
+    --color-content-muted: oklch(0.72 0.012 260);
+
+    --color-brand: oklch(0.68 0.17 250);
+    --color-brand-strong: oklch(0.6 0.19 250);
+
+    --color-danger: oklch(0.64 0.2 25);
+    --color-warning: oklch(0.76 0.15 75);
+    --color-success: oklch(0.72 0.16 155);
+}
+
+html,
+body,
+#app {
+    height: 100%;
+}
+
+body {
+    background-color: var(--color-surface);
+    color: var(--color-content);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Status colours carry meaning and nothing else. A danger-coloured element
+ * always means something is wrong, never that something is merely important,
+ * so that scanning a list of 2,000 devices for red stays reliable.
+ *
+ * On a dark surface the light-theme pattern of "pale tint, dark text" inverts:
+ * badges are a low-opacity wash of the status colour with the full-strength
+ * token as text. That is expressed at the call site with opacity modifiers
+ * (bg-success/12, ring-success/30), which the tokens above support directly.
+ */
+
+/*
+ * Tabular figures in data tables, so columns of counts and dates line up
+ * instead of jittering row to row.
+ */
+@utility tabular {
+    font-variant-numeric: tabular-nums;
+}
